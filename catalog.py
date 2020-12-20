@@ -29,12 +29,6 @@ class Directory(object):
         self.directories = directories
         self.properties = properties
 
-    def set_files(self, files):
-        self.files = files
-
-    def sef_dirs(self, dirs):
-        self.directories = dirs
-
     def get_dir(self, dirname: str):
         return self.directories[dirname]
 
@@ -46,19 +40,14 @@ class File(object):
         self.paths = paths
         self.flag = flag
 
-    def set_props(self, props):
-        self.properties = props
 
     def set_data(self, data):
         self.data = data
 
 
-# static method
-
-
 class Catalog(LoggingMixIn, Operations):
     # Initialization:
-    def __init__(self, path_load):
+    def __init__(self):
         self.is_empty = True  # has or not songs
         self.filesystem = {}  # map(dict) of Directory
         self.fd = 0
@@ -68,12 +57,6 @@ class Catalog(LoggingMixIn, Operations):
             st_mode=0o040555, st_nlink=2, st_size=0, st_ctime=now,
             st_mtime=now, st_atime=now, st_gid=os.getgid(), st_uid=os.getuid()))
         self.add_dir("ALL", self.filesystem['/'], 0o040666)
-        if path_load:
-            self.load_filesystem(path_load)
-
-
-    def load_filesystem(self, path_load):
-        print("TO-DO LOAD FS ")
 
 
     def get_newname(self, filename):
@@ -115,7 +98,6 @@ class Catalog(LoggingMixIn, Operations):
     # add to check right data
     def write(self, path, data, offset, fh):
         filename = self.get_filename(path)
-        #dirname = self.get_dirname(path)  # ? maybe delete it?
         # it always non NONE,is is calling after create file
         st = self.get_file(path)
         if st.flag:
@@ -148,11 +130,6 @@ class Catalog(LoggingMixIn, Operations):
         attrs[name] = value
 
 
-    def update_size(self):
-        pass
-
-
-    # modify update ???
     def truncate(self, path, length, fh=None):
         filename = self.get_filename(path)
         st = self.get_file(path)
@@ -308,7 +285,7 @@ class Catalog(LoggingMixIn, Operations):
                 return target[len(prefix):]
         return target
 
-
+    #parse album, title, artist
     def parse_data(self, data):
         prefixes = ["THE", "the", "The"]
         lines = (data.decode('ascii')).split('\n')
@@ -327,6 +304,7 @@ class Catalog(LoggingMixIn, Operations):
         return '/'.join(path.split('/')[:-1])
 
 
+    #get file object from path
     def get_file(self, path):
         if path[-1] == '/':
             return None
@@ -340,6 +318,7 @@ class Catalog(LoggingMixIn, Operations):
             return None
 
 
+    #get directory object from path
     def get_dir(self, path):
         path = path.rstrip('/')
         patharray = path.split('/')
@@ -369,4 +348,4 @@ if __name__ == '__main__':
     parser = parser = argparse.ArgumentParser(description="Filesystem Song Catalog")
     parser.add_argument('mountpoint', type=str, help='directory like songs/')
     args = parser.parse_args()
-    fuse = FUSE(Catalog(None), args.mountpoint, foreground=True, debug=True)
+    fuse = FUSE(Catalog(), args.mountpoint, foreground=True, debug=True)
